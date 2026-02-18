@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRI EduQ – QR Code Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- QR Code library from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #F0F4FA;
+    min-height: 100vh;
+    padding: 24px 16px 40px;
+    color: #0F1629;
+  }
+
+  .container { max-width: 480px; margin: 0 auto; }
+
+  .page-header {
+    text-align: center;
+    padding: 28px 24px;
+    background: linear-gradient(135deg, #003F88, #0065CC);
+    border-radius: 20px;
+    color: white;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(0,63,136,.25);
+  }
+
+  .ph-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .ph-badge {
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,.2);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; color: white;
+  }
+
+  .ph-name { font-size: 22px; font-weight: 800; }
+  .ph-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .ph-sub { font-size: 12px; color: rgba(255,255,255,.65); line-height: 1.5; }
+
+  /* URL Input */
+  .url-section {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,63,136,.08);
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #8899BB;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  .url-input-wrap {
+    display: flex;
+    gap: 8px;
+  }
+
+  .url-input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 2px solid #D8E4F5;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #0F1629;
+    background: #F8FAFF;
+    transition: border-color .2s;
+    outline: none;
+  }
+
+  .url-input:focus { border-color: #0065CC; }
+
+  .generate-btn {
+    padding: 12px 18px;
+    background: linear-gradient(135deg, #003F88, #0065CC);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform .2s;
+  }
+  .generate-btn:active { transform: scale(0.97); }
+
+  .url-hint {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #8899BB;
+    line-height: 1.5;
+  }
+
+  .url-hint a { color: #0065CC; text-decoration: none; font-weight: 600; }
+
+  /* QR Display */
+  .qr-display {
+    background: white;
+    border-radius: 20px;
+    padding: 28px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,63,136,.12);
+    margin-bottom: 20px;
+  }
+
+  #qrcode-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  #qrcode-container canvas,
+  #qrcode-container img {
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  }
+
+  .qr-url-display {
+    font-size: 11px;
+    color: #8899BB;
+    word-break: break-all;
+    padding: 8px 12px;
+    background: #F0F4FA;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-family: monospace;
+  }
+
+  .qr-action-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .qr-btn {
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .qr-btn:active { transform: scale(0.97); }
+  .qr-btn.download { background: linear-gradient(135deg, #0D9B50, #22C06A); color: white; }
+  .qr-btn.print    { background: linear-gradient(135deg, #003F88, #0065CC); color: white; }
+
+  /* Ticket Print Preview */
+  .ticket-print-section {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,63,136,.08);
+  }
+
+  .ticket-mockup {
+    background: white;
+    border: 2px solid #E5EAF3;
+    border-radius: 14px;
+    overflow: hidden;
+    max-width: 280px;
+    margin: 0 auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  }
+
+  .tm-stripe {
+    height: 5px;
+    background: linear-gradient(90deg, #F47920, #FFB800);
+  }
+
+  .tm-body { padding: 16px; }
+
+  .tm-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .tm-logo {
+    width: 28px; height: 28px;
+    background: #003F88;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 800; color: white;
+  }
+
+  .tm-brand { font-size: 16px; font-weight: 800; color: #003F88; }
+
+  .tm-number { text-align: center; margin-bottom: 10px; }
+  .tm-number .n { font-size: 40px; font-weight: 800; color: #003F88; line-height: 1; }
+  .tm-number .t { font-size: 10px; color: #8899BB; }
+
+  .tm-dashed { border: none; border-top: 2px dashed #E5EAF3; margin: 10px 0; }
+
+  .tm-meta { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 10px; }
+  .tm-meta .ml { color: #8899BB; }
+  .tm-meta .mv { font-weight: 700; color: #0F1629; }
+
+  .tm-qr-box {
+    background: #EEF4FF;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .tm-qr-img { width: 50px; height: 50px; background: #003F88; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+  .tm-qr-text .qt { font-size: 10px; font-weight: 700; color: #003F88; }
+  .tm-qr-text .qs { font-size: 9px; color: #8899BB; margin-top: 2px; }
+
+  .tm-tips { font-size: 10px; color: #8899BB; line-height: 1.6; }
+  .tm-tips span { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 2px; }
+  .tm-tips .dot { width: 5px; height: 5px; background: #F47920; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+
+  .tm-footer {
+    background: linear-gradient(135deg, #003F88, #0065CC);
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 9px;
+    color: rgba(255,255,255,.7);
+    font-weight: 600;
+  }
+
+  /* Quick links */
+  .quick-links {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0,63,136,.08);
+    margin-bottom: 20px;
+  }
+
+  .ql-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .ql-item {
+    background: #F0F4FA;
+    border-radius: 12px;
+    padding: 12px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background .2s, transform .2s;
+  }
+
+  .ql-item:active { transform: scale(0.97); background: #E0EAF8; }
+  .ql-item .ql-icon { font-size: 20px; }
+  .ql-item .ql-text { font-size: 12px; font-weight: 600; color: #0F1629; }
+  .ql-item .ql-sub  { font-size: 10px; color: #8899BB; margin-top: 1px; }
+
+  /* PRINT STYLES */
+  @media print {
+    body { background: white; padding: 0; }
+    .container { max-width: 100%; }
+    .page-header, .url-section, .quick-links, .qr-action-btns, .print-hide { display: none !important; }
+    .ticket-print-section { box-shadow: none; border: none; padding: 0; }
+    .ticket-mockup { max-width: 200px; border: 1px solid #ccc; }
+    .section-label { display: none; }
+    .qr-display { box-shadow: none; border: 1px solid #eee; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="ph-logo">
+      <div class="ph-badge">BRI</div>
+      <span class="ph-name">EduQ</span>
+    </div>
+    <div class="ph-title">QR Code Generator</div>
+    <div class="ph-sub">Generate QR Code untuk dicetak di karcis antrian BRI. Nasabah scan → langsung ke microsite EduQ.</div>
+  </div>
+
+  <!-- URL Input -->
+  <div class="url-section print-hide">
+    <div class="section-label">🔗 URL Microsite EduQ</div>
+    <div class="url-input-wrap">
+      <input type="text" class="url-input" id="url-input"
+        value="https://bri-eduq.pages.dev"
+        placeholder="https://bri-eduq.pages.dev">
+      <button class="generate-btn" onclick="generateQR()">Generate</button>
+    </div>
+    <div class="url-hint">
+      Gunakan URL deployment microsite EduQ Anda. Bisa juga pakai
+      <a href="https://bri-eduq.vercel.app" target="_blank">Vercel</a>,
+      <a href="https://bri-eduq.netlify.app" target="_blank">Netlify</a>, atau
+      <a href="#" onclick="useGithubPages()">GitHub Pages</a>.
+      <br><br>
+      Deep-link per layanan: <code style="font-family:monospace;font-size:10px">?s=rekening-baru</code>
+    </div>
+  </div>
+
+  <!-- QR Display -->
+  <div class="qr-display">
+    <div class="section-label print-hide">QR Code Hasil</div>
+    <div id="qrcode-container"></div>
+    <div class="qr-url-display" id="qr-url-display">https://bri-eduq.pages.dev</div>
+    <div class="qr-action-btns print-hide">
+      <button class="qr-btn download" onclick="downloadQR()">⬇ Download PNG</button>
+      <button class="qr-btn print" onclick="window.print()">🖨 Cetak Karcis</button>
+    </div>
+  </div>
+
+  <!-- Ticket Print Preview -->
+  <div class="ticket-print-section">
+    <div class="section-label print-hide">🎫 Preview Karcis Antrian (dengan QR)</div>
+    <div class="ticket-mockup">
+      <div class="tm-stripe"></div>
+      <div class="tm-body">
+        <div class="tm-header">
+          <div class="tm-logo">BRI</div>
+          <span class="tm-brand">BRI</span>
+        </div>
+        <div class="tm-number">
+          <div class="n">A 037</div>
+          <div class="t">Antrean Teller / Customer Service</div>
+        </div>
+        <hr class="tm-dashed">
+        <div class="tm-meta">
+          <span><span class="ml">Tanggal</span><br><span class="mv" id="print-date">—</span></span>
+          <span><span class="ml">Waktu</span><br><span class="mv" id="print-time">—</span></span>
+          <span><span class="ml">Loket</span><br><span class="mv">CS/Teller</span></span>
+        </div>
+        <hr class="tm-dashed">
+        <div class="tm-qr-box">
+          <div class="tm-qr-img" id="ticket-qr-mini">
+            <!-- QR will be injected here -->
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+              <rect x="2" y="2" width="10" height="10" rx="2" fill="white" opacity=".3"/>
+              <rect x="24" y="2" width="10" height="10" rx="2" fill="white" opacity=".3"/>
+              <rect x="2" y="24" width="10" height="10" rx="2" fill="white" opacity=".3"/>
+              <rect x="14" y="14" width="8" height="8" rx="1.5" fill="white" opacity=".2"/>
+            </svg>
+          </div>
+          <div class="tm-qr-text">
+            <div class="qt">📱 Scan QR Sekarang!</div>
+            <div class="qs">Cek dokumen & info keamanan</div>
+            <div class="qs" style="color:#F47920;font-weight:700;margin-top:3px">EduQ System · BRI</div>
+          </div>
+        </div>
+        <div class="tm-tips">
+          <span><div class="dot"></div>Pastikan dokumen siap sebelum dipanggil</span>
+          <span><div class="dot"></div>Ketahui persyaratan dengan pasti</span>
+          <span><div class="dot"></div>Mohon menunggu panggilan Anda</span>
+        </div>
+      </div>
+      <div class="tm-footer">BRI Smart Queue · KC MPH · EduQ System 2025</div>
+    </div>
+  </div>
+
+  <!-- Quick Link Shortcuts -->
+  <div class="quick-links print-hide">
+    <div class="section-label">⚡ Deep-Link per Layanan (klik untuk generate QR)</div>
+    <div class="ql-grid">
+      <a class="ql-item" href="#" onclick="setURL('?s=rekening-baru')">
+        <span class="ql-icon">🏦</span>
+        <div><div class="ql-text">Buka Rekening</div><div class="ql-sub">?s=rekening-baru</div></div>
+      </a>
+      <a class="ql-item" href="#" onclick="setURL('?s=tutup-rekening')">
+        <span class="ql-icon">🔒</span>
+        <div><div class="ql-text">Tutup Rekening</div><div class="ql-sub">?s=tutup-rekening</div></div>
+      </a>
+      <a class="ql-item" href="#" onclick="setURL('?s=ubah-data')">
+        <span class="ql-icon">✏️</span>
+        <div><div class="ql-text">Ubah Data CIF</div><div class="ql-sub">?s=ubah-data</div></div>
+      </a>
+      <a class="ql-item" href="#" onclick="setURL('?s=digital-banking')">
+        <span class="ql-icon">📱</span>
+        <div><div class="ql-text">Digital Banking</div><div class="ql-sub">?s=digital-banking</div></div>
+      </a>
+      <a class="ql-item" href="#" onclick="setURL('?s=kartu-atm')">
+        <span class="ql-icon">💳</span>
+        <div><div class="ql-text">Ganti Kartu ATM</div><div class="ql-sub">?s=kartu-atm</div></div>
+      </a>
+      <a class="ql-item" href="#" onclick="setURL('?psa=1')">
+        <span class="ql-icon">🚨</span>
+        <div><div class="ql-text">PSA Keamanan</div><div class="ql-sub">?psa=1</div></div>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const BASE_URL = 'https://bri-eduq.pages.dev';
+let currentURL = BASE_URL;
+let qrInstance = null;
+
+function generateQR(url) {
+  const inputURL = url || document.getElementById('url-input').value.trim() || BASE_URL;
+  currentURL = inputURL;
+
+  document.getElementById('qr-url-display').textContent = inputURL;
+
+  const container = document.getElementById('qrcode-container');
+  container.innerHTML = '';
+
+  qrInstance = new QRCode(container, {
+    text: inputURL,
+    width: 200,
+    height: 200,
+    colorDark: '#003F88',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  // Update ticket QR mini
+  setTimeout(() => {
+    const canvas = container.querySelector('canvas');
+    if (canvas) {
+      const miniDiv = document.getElementById('ticket-qr-mini');
+      const miniCanvas = document.createElement('canvas');
+      miniCanvas.width = 50; miniCanvas.height = 50;
+      const ctx = miniCanvas.getContext('2d');
+      ctx.drawImage(canvas, 0, 0, 50, 50);
+      miniDiv.innerHTML = '';
+      miniDiv.appendChild(miniCanvas);
+    }
+  }, 200);
+}
+
+function setURL(suffix) {
+  const base = document.getElementById('url-input').value.trim() || BASE_URL;
+  const cleanBase = base.split('?')[0];
+  const fullURL = cleanBase + suffix;
+  document.getElementById('url-input').value = fullURL;
+  generateQR(fullURL);
+  return false;
+}
+
+function downloadQR() {
+  const canvas = document.querySelector('#qrcode-container canvas');
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = 'BRI-EduQ-QRCode.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function useGithubPages() {
+  document.getElementById('url-input').value = 'https://yourusername.github.io/bri-eduq';
+  generateQR();
+  return false;
+}
+
+// Init
+const now = new Date();
+const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+document.getElementById('print-date').textContent = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+document.getElementById('print-time').textContent = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} WIB`;
+
+window.addEventListener('load', () => generateQR());
+</script>
+</body>
+</html>
