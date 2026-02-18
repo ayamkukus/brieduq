@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
+<html lang="id"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#003F88">
@@ -15,7 +13,7 @@
 
 <!-- Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap" rel="stylesheet">
 
 <style>
 /* ═══════════════════════════════════
@@ -738,19 +736,16 @@ body {
   background: #080C18;
   min-height: 100%;
   color: white;
-  position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
 }
 
 .psa-glow-bg {
-  position: absolute;
+  position: fixed;
   top: 0; left: 0; right: 0;
   height: 60%;
   background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(208,2,27,.2) 0%, transparent 70%);
   pointer-events: none;
-  z-index: 0;
 }
 
 .psa-header {
@@ -794,11 +789,9 @@ body {
 }
 
 .psa-body {
-  padding: 0 20px 0;
+  padding: 0 20px calc(var(--safe-bot) + 24px);
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 .psa-hero {
@@ -944,12 +937,13 @@ body {
 .psa-cta-section {
   position: sticky;
   bottom: 0;
-  padding: 14px 20px calc(var(--safe-bot) + 14px);
-  background: rgba(8,12,24,.97);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(255,255,255,.08);
-  z-index: 20;
+  padding: 14px 0 calc(var(--safe-bot) + 14px);
+  background: rgba(8,12,24,.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255,255,255,.06);
+  margin: 0 -20px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .understand-btn {
@@ -1261,11 +1255,19 @@ body {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
-</head>
+<style>
+    @keyframes shakeBtn {
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-8px)}
+      40%{transform:translateX(8px)}
+      60%{transform:translateX(-6px)}
+      80%{transform:translateX(6px)}
+    }
+  </style></head>
 <body>
 
 <!-- ══════════════════════════════ LOADING SPLASH ══════════════════════════════ -->
-<div id="loading-splash">
+<div id="loading-splash" class="hide" style="display: none;">
   <div class="splash-logo">
     <div class="splash-badge">BRI</div>
     <div class="splash-title">EduQ</div>
@@ -1281,7 +1283,7 @@ body {
   <div class="toast" id="toast"></div>
 
   <!-- ════════════════ SCREEN 1: WELCOME ════════════════ -->
-  <div class="screen active" id="screen-welcome">
+  <div class="screen" id="screen-welcome">
     <div class="welcome-orbs">
       <div class="orb orb-1"></div>
       <div class="orb orb-2"></div>
@@ -1316,11 +1318,11 @@ body {
       <div class="tp-meta">
         <div class="tp-meta-item">
           <div class="lbl">Tanggal</div>
-          <div class="val" id="ticket-date">—</div>
+          <div class="val" id="ticket-date">18 Feb 2026</div>
         </div>
         <div class="tp-meta-item">
           <div class="lbl">Waktu</div>
-          <div class="val" id="ticket-time">—</div>
+          <div class="val" id="ticket-time">11:42 WIB</div>
         </div>
         <div class="tp-meta-item">
           <div class="lbl">Loket</div>
@@ -1330,31 +1332,31 @@ body {
       <div class="tp-qr-section">
         <div class="tp-qr-text">
           <div class="qr-title">📱 Scan untuk persiapan</div>
-          <div class="qr-sub">Cek dokumen & keamanan</div>
+          <div class="qr-sub">Cek dokumen &amp; keamanan</div>
         </div>
         <div class="qr-mini">
           <!-- Minimal QR pattern -->
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <rect x="2" y="2" width="9" height="9" rx="1.5" fill="white"/>
-            <rect x="3.5" y="3.5" width="6" height="6" rx="1" fill="#003F88"/>
-            <rect x="4.5" y="4.5" width="4" height="4" rx=".5" fill="white"/>
-            <rect x="21" y="2" width="9" height="9" rx="1.5" fill="white"/>
-            <rect x="22.5" y="3.5" width="6" height="6" rx="1" fill="#003F88"/>
-            <rect x="23.5" y="4.5" width="4" height="4" rx=".5" fill="white"/>
-            <rect x="2" y="21" width="9" height="9" rx="1.5" fill="white"/>
-            <rect x="3.5" y="22.5" width="6" height="6" rx="1" fill="#003F88"/>
-            <rect x="4.5" y="23.5" width="4" height="4" rx=".5" fill="white"/>
-            <rect x="13" y="2" width="3" height="3" rx=".5" fill="white"/>
-            <rect x="17" y="2" width="3" height="3" rx=".5" fill="white"/>
-            <rect x="13" y="6" width="3" height="3" rx=".5" fill="white"/>
-            <rect x="13" y="13" width="6" height="6" rx="1" fill="white" opacity=".4"/>
-            <rect x="14.5" y="14.5" width="3" height="3" rx=".5" fill="white"/>
-            <rect x="21" y="13" width="3" height="3" rx=".5" fill="white"/>
-            <rect x="25" y="13" width="6" height="3" rx=".5" fill="white"/>
-            <rect x="13" y="21" width="3" height="6" rx=".5" fill="white"/>
-            <rect x="17" y="21" width="6" height="3" rx=".5" fill="white"/>
-            <rect x="21" y="25" width="3" height="6" rx=".5" fill="white"/>
-            <rect x="25" y="21" width="6" height="6" rx="1" fill="white"/>
+            <rect x="2" y="2" width="9" height="9" rx="1.5" fill="white"></rect>
+            <rect x="3.5" y="3.5" width="6" height="6" rx="1" fill="#003F88"></rect>
+            <rect x="4.5" y="4.5" width="4" height="4" rx=".5" fill="white"></rect>
+            <rect x="21" y="2" width="9" height="9" rx="1.5" fill="white"></rect>
+            <rect x="22.5" y="3.5" width="6" height="6" rx="1" fill="#003F88"></rect>
+            <rect x="23.5" y="4.5" width="4" height="4" rx=".5" fill="white"></rect>
+            <rect x="2" y="21" width="9" height="9" rx="1.5" fill="white"></rect>
+            <rect x="3.5" y="22.5" width="6" height="6" rx="1" fill="#003F88"></rect>
+            <rect x="4.5" y="23.5" width="4" height="4" rx=".5" fill="white"></rect>
+            <rect x="13" y="2" width="3" height="3" rx=".5" fill="white"></rect>
+            <rect x="17" y="2" width="3" height="3" rx=".5" fill="white"></rect>
+            <rect x="13" y="6" width="3" height="3" rx=".5" fill="white"></rect>
+            <rect x="13" y="13" width="6" height="6" rx="1" fill="white" opacity=".4"></rect>
+            <rect x="14.5" y="14.5" width="3" height="3" rx=".5" fill="white"></rect>
+            <rect x="21" y="13" width="3" height="3" rx=".5" fill="white"></rect>
+            <rect x="25" y="13" width="6" height="3" rx=".5" fill="white"></rect>
+            <rect x="13" y="21" width="3" height="6" rx=".5" fill="white"></rect>
+            <rect x="17" y="21" width="6" height="3" rx=".5" fill="white"></rect>
+            <rect x="21" y="25" width="3" height="6" rx=".5" fill="white"></rect>
+            <rect x="25" y="21" width="6" height="6" rx="1" fill="white"></rect>
           </svg>
         </div>
       </div>
@@ -1389,16 +1391,16 @@ body {
     <div class="menu-body">
       <div class="menu-section-label">Layanan Perbankan</div>
 
-      <div class="menu-card ripple-container stagger-child" onclick="showChecklist('rekening-baru', this)">
+      <div class="menu-card ripple-container stagger-child animate" onclick="showChecklist('rekening-baru', this)" style="animation-delay: 0s;">
         <div class="menu-card-icon ic-blue">🏦</div>
         <div class="menu-card-text">
           <h3>Buka Rekening Tabungan</h3>
-          <p>Cek persyaratan & kelengkapan dokumen pembukaan rekening baru</p>
+          <p>Cek persyaratan &amp; kelengkapan dokumen pembukaan rekening baru</p>
         </div>
         <div class="menu-card-arrow">›</div>
       </div>
 
-      <div class="menu-card ripple-container stagger-child" onclick="showChecklist('tutup-rekening', this)">
+      <div class="menu-card ripple-container stagger-child animate" onclick="showChecklist('tutup-rekening', this)" style="animation-delay: 0.07s;">
         <div class="menu-card-icon ic-orange">🔒</div>
         <div class="menu-card-text">
           <h3>Tutup Rekening</h3>
@@ -1407,7 +1409,7 @@ body {
         <div class="menu-card-arrow">›</div>
       </div>
 
-      <div class="menu-card ripple-container stagger-child" onclick="showChecklist('ubah-data', this)">
+      <div class="menu-card ripple-container stagger-child animate" onclick="showChecklist('ubah-data', this)" style="animation-delay: 0.14s;">
         <div class="menu-card-icon ic-green">✏️</div>
         <div class="menu-card-text">
           <h3>Perubahan Data (CIF)</h3>
@@ -1416,7 +1418,7 @@ body {
         <div class="menu-card-arrow">›</div>
       </div>
 
-      <div class="menu-card ripple-container stagger-child" onclick="showChecklist('digital-banking', this)">
+      <div class="menu-card ripple-container stagger-child animate" onclick="showChecklist('digital-banking', this)" style="animation-delay: 0.21s;">
         <div class="menu-card-icon ic-blue">📱</div>
         <div class="menu-card-text">
           <h3>Aktivasi Digital Banking</h3>
@@ -1425,7 +1427,7 @@ body {
         <div class="menu-card-arrow">›</div>
       </div>
 
-      <div class="menu-card ripple-container stagger-child" onclick="showChecklist('kartu-atm', this)">
+      <div class="menu-card ripple-container stagger-child animate" onclick="showChecklist('kartu-atm', this)" style="animation-delay: 0.28s;">
         <div class="menu-card-icon ic-purple">💳</div>
         <div class="menu-card-text">
           <h3>Penggantian Kartu ATM</h3>
@@ -1436,7 +1438,7 @@ body {
 
       <div class="menu-section-label">Keamanan Penting</div>
 
-      <div class="warn-banner ripple-container stagger-child" onclick="goToScreen('screen-psa'); return false;">
+      <div class="warn-banner ripple-container stagger-child animate" onclick="goToScreen('screen-psa')" style="animation-delay: 0.35s;">
         <div class="warn-banner-icon">🚨</div>
         <div class="warn-banner-text">
           <h3>Waspada! Jual Beli Rekening</h3>
@@ -1485,7 +1487,7 @@ body {
   </div>
 
   <!-- ════════════════ SCREEN 4: PSA ════════════════ -->
-  <div class="screen" id="screen-psa">
+  <div class="screen active" id="screen-psa">
     <div class="psa-glow-bg"></div>
 
     <div class="psa-header">
@@ -1517,9 +1519,9 @@ body {
         </div>
         <div class="vc-impacts">
           <div class="vc-impact-item"><span class="xi">❌</span><span>Rekening dipakai untuk kejahatan: penipuan online, narkotika, atau terorisme</span></div>
-          <div class="vc-impact-item"><span class="xi">❌</span><span>Nama & identitas Anda tersangkut kasus pidana berat</span></div>
+          <div class="vc-impact-item"><span class="xi">❌</span><span>Nama &amp; identitas Anda tersangkut kasus pidana berat</span></div>
           <div class="vc-impact-item"><span class="xi">❌</span><span>Ditangkap, dituntut, dipenjara — padahal "hanya jual rekening"</span></div>
-          <div class="vc-impact-item"><span class="xi">❌</span><span>Semua rekening & aset Anda diblokir selamanya oleh PPATK</span></div>
+          <div class="vc-impact-item"><span class="xi">❌</span><span>Semua rekening &amp; aset Anda diblokir selamanya oleh PPATK</span></div>
         </div>
       </div>
 
@@ -1527,7 +1529,7 @@ body {
         <div class="vc-header">
           <div class="vc-icon">😱</div>
           <div class="vc-header-text">
-            <h3>Keluarga & Orang Terdekat</h3>
+            <h3>Keluarga &amp; Orang Terdekat</h3>
             <p>Yang ikut menanggung dampaknya</p>
           </div>
         </div>
@@ -1551,7 +1553,7 @@ body {
       <div class="law-box" style="border-color:rgba(100,180,255,.25); background:rgba(0,101,204,.08);">
         <div class="law-icon">📋</div>
         <div class="law-text">
-          <h3 style="color:#6BBFFF">UU ITE & KUHP</h3>
+          <h3 style="color:#6BBFFF">UU ITE &amp; KUHP</h3>
           <p>Penyedia rekening untuk penipuan digital juga dapat dijerat UU ITE dengan ancaman pidana <strong style="color:#6BBFFF">4–12 tahun penjara.</strong></p>
         </div>
       </div>
@@ -1579,7 +1581,7 @@ body {
 
       <div class="psa-cta-section">
         <button class="understand-btn" onclick="goBack('screen-menu')">
-          ✅ Saya Mengerti & Akan Waspada
+          ✅ Saya Mengerti &amp; Akan Waspada
         </button>
         <div class="report-link">
           Ada tawaran mencurigakan? <a href="tel:14017">Laporkan ke BRI Call 14017</a>
@@ -2012,5 +2014,6 @@ document.addEventListener('touchend', function(e) {
   lastTap = now;
 }, { passive: false });
 </script>
-</body>
-</html>
+
+
+</body></html>
