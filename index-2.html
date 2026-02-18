@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#003F88">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BRI EduQ">
+<title>BRI EduQ – Smart Queue System</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --blue:#003F88;--blue-l:#0065CC;--blue-pale:#EEF4FF;
+  --orange:#F47920;--gold:#FFB800;
+  --green:#0D9B50;--green-bg:#E8F9EF;
+  --red:#D0021B;
+  --text:#0F1629;--muted:#8899BB;--border:#D8E4F5;
+  --bg:#F0F4FA;--card:#FFFFFF;
+}
+html,body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  background:var(--bg);color:var(--text);
+  /* TIDAK ada overflow:hidden di sini */
+}
+
+/* ── SCREEN SYSTEM ──
+   Setiap screen adalah block penuh.
+   Hanya satu yang ditampilkan sekaligus.
+   Navigasi: toggle class .active
+   TIDAK pakai position:fixed atau overflow:hidden
+── */
+.screen{display:none;min-height:100vh;animation:fadeUp .3s ease both}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SPLASH ── */
+#splash{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(160deg,#001835,var(--blue));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .5s,transform .5s;
+}
+#splash.out{opacity:0;transform:scale(1.05);pointer-events:none}
+.sp-box{width:76px;height:76px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.25);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;margin-bottom:12px}
+.sp-name{font-size:30px;font-weight:800;color:#fff;margin-bottom:4px}
+.sp-sub{font-size:12px;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase;margin-bottom:32px}
+.sp-spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.15);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:#1a1a2e;color:#fff;font-size:13px;font-weight:600;
+  padding:10px 20px;border-radius:100px;z-index:8000;
+  opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── CONFETTI ── */
+.cf{position:fixed;top:-10px;border-radius:2px;pointer-events:none;z-index:9000;animation:cffall linear both}
+@keyframes cffall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(105vh) rotate(720deg)}}
+
+/* ────────────────────────────────
+   SCREEN 1: WELCOME
+──────────────────────────────── */
+#s-welcome{
+  background:linear-gradient(160deg,#001835 0%,var(--blue) 50%,var(--blue-l) 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 24px 56px;position:relative;overflow:hidden;
+}
+.orb{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.07) 0%,transparent 70%);pointer-events:none}
+.orb1{width:280px;height:280px;top:-80px;right:-80px}
+.orb2{width:220px;height:220px;bottom:60px;left:-70px}
+
+.wlc-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;position:relative;z-index:1}
+.wlc-box{width:54px;height:54px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.25);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff}
+.wlc-name{font-size:26px;font-weight:800;color:#fff}
+.wlc-sq{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1.5px;text-transform:uppercase}
+
+.wlc-hero{text-align:center;margin-bottom:28px;position:relative;z-index:1}
+.pill{display:inline-block;background:rgba(255,184,0,.2);border:1px solid rgba(255,184,0,.4);color:var(--gold);font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;margin-bottom:14px;letter-spacing:1px;text-transform:uppercase}
+.wlc-title{font-size:34px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:10px}
+.wlc-title span{background:linear-gradient(90deg,var(--gold),#ffe080);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.wlc-sub{font-size:14px;color:rgba(255,255,255,.65);line-height:1.6;max-width:280px;margin:0 auto}
+
+/* Tiket */
+.ticket{background:#fff;border-radius:20px;width:100%;max-width:320px;box-shadow:0 24px 64px rgba(0,0,0,.35);margin-bottom:24px;overflow:hidden;position:relative;z-index:1}
+.t-stripe{height:5px;background:linear-gradient(90deg,var(--orange),var(--gold))}
+.t-body{padding:16px 20px}
+.t-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.t-logo{width:30px;height:30px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff}
+.t-brand{font-size:18px;font-weight:800;color:var(--blue)}
+.t-num-wrap{text-align:center;margin-bottom:10px}
+.t-num{font-size:50px;font-weight:800;color:var(--blue);line-height:1}
+.t-type{font-size:11px;color:var(--muted);margin-top:3px}
+.t-dash{border:none;border-top:2px dashed var(--border);margin:10px 0}
+.t-meta{display:flex;justify-content:space-between;margin-bottom:12px}
+.t-ml{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.t-mv{font-size:13px;font-weight:700;color:var(--text);margin-top:2px}
+.t-qr{background:var(--blue-pale);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:12px}
+.t-qt{font-size:11px;font-weight:700;color:var(--blue)}
+.t-qs{font-size:10px;color:var(--muted);margin-top:2px}
+.t-qr-icon{width:44px;height:44px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+.wlc-btn{width:100%;max-width:320px;padding:16px;border:none;border-radius:16px;background:linear-gradient(135deg,var(--orange),var(--gold));color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 8px 28px rgba(244,121,32,.45);transition:transform .15s;position:relative;z-index:1}
+.wlc-btn:active{transform:scale(.97)}
+.wlc-foot{margin-top:14px;font-size:11px;color:rgba(255,255,255,.3);position:relative;z-index:1}
+
+/* ────────────────────────────────
+   SHARED HEADER
+──────────────────────────────── */
+.app-hdr{
+  background:linear-gradient(135deg,var(--blue),var(--blue-l));
+  padding:48px 20px 20px;color:#fff;
+  position:sticky;top:0;z-index:100;
+}
+.ah-row{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.ah-back{width:36px;height:36px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:10px;font-size:22px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.ah-back:active{background:rgba(255,255,255,.28)}
+.ah-sm-logo{width:28px;height:28px;background:rgba(255,255,255,.2);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0}
+.ah-title{flex:1}
+.ah-t1{font-size:15px;font-weight:700;color:#fff}
+.ah-t2{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px}
+.ah-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.ah-big{font-size:20px;font-weight:800;color:#fff;line-height:1.3;margin-top:4px}
+.ah-desc{font-size:13px;color:rgba(255,255,255,.7);margin-top:3px}
+
+/* ────────────────────────────────
+   SCREEN 2: MENU
+──────────────────────────────── */
+#s-menu{background:var(--bg)}
+.menu-body{padding:16px;display:flex;flex-direction:column;gap:10px}
+.sec-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;padding:4px 4px 2px;display:flex;align-items:center;gap:8px;margin-top:4px}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.mc{background:var(--card);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,63,136,.07);border:2px solid transparent;transition:border-color .2s,transform .15s;-webkit-user-select:none;user-select:none}
+.mc:active{transform:scale(.98);border-color:var(--blue-l)}
+.mc-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.ic-b{background:#eef4ff}.ic-o{background:#fff3e8}.ic-g{background:#e8f9ef}.ic-p{background:#f3eeff}
+.mc-text{flex:1}
+.mc-text h3{font-size:14px;font-weight:700;color:var(--text)}
+.mc-text p{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4}
+.mc-arr{width:28px;height:28px;background:var(--blue-pale);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:17px;font-weight:700;flex-shrink:0}
+
+.warn-btn{
+  background:linear-gradient(135deg,#fff3e8,#fff8f2);
+  border:2px solid var(--orange);border-radius:16px;
+  padding:16px;display:flex;gap:12px;cursor:pointer;
+  box-shadow:0 4px 16px rgba(244,121,32,.15);
+  transition:transform .15s;-webkit-user-select:none;user-select:none;
+}
+.warn-btn:active{transform:scale(.98)}
+.wb-icon{font-size:28px;flex-shrink:0}
+.wb-text h3{font-size:14px;font-weight:800;color:#b34400}
+.wb-text p{font-size:12px;color:#8b5e3c;margin-top:4px;line-height:1.5}
+.menu-pad{height:32px}
+
+/* ────────────────────────────────
+   SCREEN 3: CHECKLIST
+──────────────────────────────── */
+#s-checklist{background:var(--bg)}
+.prog-box{background:var(--card);margin:14px 16px;border-radius:16px;padding:14px 16px;box-shadow:0 2px 10px rgba(0,63,136,.07)}
+.pb-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.pb-lbl{font-size:13px;font-weight:700;color:var(--text)}
+.pb-cnt{font-size:13px;font-weight:800;color:var(--blue)}
+.pb-track{height:8px;background:var(--border);border-radius:100px;overflow:hidden}
+.pb-fill{height:100%;background:linear-gradient(90deg,var(--green),#44dd88);border-radius:100px;transition:width .5s ease;width:0}
+.info-note{background:var(--blue-pale);border:1px solid rgba(0,101,204,.2);border-radius:12px;margin:0 16px 12px;padding:12px 14px;display:flex;gap:10px;font-size:13px;color:var(--blue);line-height:1.5}
+.cl-list{padding:0 16px;display:flex;flex-direction:column;gap:10px}
+.cli{background:var(--card);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;border:2px solid transparent;box-shadow:0 2px 8px rgba(0,63,136,.06);transition:border-color .2s,background .2s;-webkit-user-select:none;user-select:none;position:relative;overflow:hidden}
+.cli::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--border);transition:background .2s}
+.cli.chk{border-color:rgba(13,155,80,.3);background:linear-gradient(135deg,#f0fbf5,#fff)}
+.cli.chk::before{background:var(--green)}
+.cli-box{width:26px;height:26px;border-radius:8px;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;font-size:14px;color:transparent}
+.cli.chk .cli-box{background:var(--green);border-color:var(--green);color:#fff;transform:scale(1.05)}
+.cli-text{flex:1}
+.cli-text h4{font-size:14px;font-weight:600;color:var(--text);line-height:1.3;transition:color .2s}
+.cli-text p{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
+.cli.chk .cli-text h4{color:var(--green)}
+.cli-opt{font-size:10px;font-weight:600;color:var(--muted);background:var(--bg);padding:2px 7px;border-radius:20px;flex-shrink:0}
+.cl-foot{position:sticky;bottom:0;background:#fff;padding:14px 16px;box-shadow:0 -6px 20px rgba(0,63,136,.1);border-top:1px solid var(--border);margin-top:14px}
+.cl-foot-btn{width:100%;padding:15px;border:none;border-radius:14px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:all .3s}
+.cl-foot-btn.locked{background:var(--border);color:var(--muted);cursor:default}
+.cl-foot-btn.ready{background:linear-gradient(135deg,var(--green),#22c06a);color:#fff;box-shadow:0 8px 24px rgba(13,155,80,.35)}
+.cl-foot-btn.ready:active{transform:scale(.98)}
+.cl-hint{text-align:center;font-size:12px;color:var(--muted);margin-top:8px;min-height:16px}
+.cl-pad{height:24px}
+
+/* ────────────────────────────────
+   SCREEN 4: PSA
+   !! TIDAK ada overflow:hidden sama sekali !!
+   !! Scroll sepenuhnya alami dari browser !!
+──────────────────────────────── */
+#s-psa{
+  background:#080c18;
+  color:#fff;
+  /* min-height sudah dari .screen */
+}
+
+/* Header PSA yang sticky */
+.psa-hdr{
+  position:sticky;top:0;z-index:50;
+  padding:48px 20px 14px;
+  background:rgba(8,12,24,.95);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.07);
+  display:flex;align-items:center;gap:12px;
+}
+.psa-back{width:36px;height:36px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;font-size:22px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.psa-back:active{background:rgba(255,255,255,.2)}
+.psa-ht{flex:1}
+.psa-ht h2{font-size:14px;font-weight:700;color:#fff}
+.psa-ht p{font-size:11px;color:rgba(255,255,255,.4)}
+.psa-badge{background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;letter-spacing:.8px}
+
+/* Konten PSA dalam flow normal */
+.psa-content{padding:0 20px 0}
+
+/* Glow dekoratif — absolute dalam .psa-hero */
+.psa-hero{
+  text-align:center;padding:28px 0 20px;
+  position:relative;
+}
+.psa-hero::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:300px;height:200px;
+  background:radial-gradient(ellipse,rgba(208,2,27,.25) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+.psa-hero>*{position:relative;z-index:1}
+
+.psa-big{font-size:72px;display:block;margin-bottom:14px;animation:shake 3s ease-in-out infinite}
+@keyframes shake{0%,85%,100%{transform:scale(1) rotate(0)}90%{transform:scale(1.1) rotate(-3deg)}95%{transform:scale(1.1) rotate(3deg)}}
+.psa-tag{display:inline-block;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:4px 14px;border-radius:20px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px}
+.psa-ttl{font-size:28px;font-weight:800;line-height:1.2;margin-bottom:10px}
+.psa-ttl span{color:#ff4444}
+.psa-sub{font-size:14px;color:rgba(255,255,255,.6);line-height:1.6}
+.psa-sub strong{color:rgba(255,255,255,.85)}
+
+.psa-sl{font-size:11px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1.5px;margin:24px 0 12px;display:flex;align-items:center;gap:8px}
+.psa-sl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06)}
+
+.vc{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:12px}
+.vc-h{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.vc-ico{font-size:30px}
+.vc-ht h3{font-size:14px;font-weight:700;color:#fff}
+.vc-ht p{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+.vc-imp{background:rgba(208,2,27,.12);border:1px solid rgba(208,2,27,.2);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.vc-row{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:rgba(255,120,120,.9);line-height:1.4}
+.vc-x{flex-shrink:0;font-size:14px}
+
+.lc{background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.25);border-radius:16px;padding:16px;display:flex;gap:12px;margin-bottom:12px}
+.lc.blue{background:rgba(0,101,204,.08);border-color:rgba(100,180,255,.25)}
+.lc-ico{font-size:28px;flex-shrink:0}
+.lc-txt h3{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:6px}
+.lc.blue .lc-txt h3{color:#6bbfff}
+.lc-txt p{font-size:13px;color:rgba(255,255,255,.65);line-height:1.6}
+.lc-txt strong{color:var(--gold)}
+.lc.blue .lc-txt strong{color:#6bbfff}
+
+.ss{display:flex;flex-direction:column;gap:10px;margin-bottom:4px}
+.ss-item{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px 14px}
+.ss-n{width:30px;height:30px;border-radius:10px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0}
+.ss-t{font-size:13px;color:rgba(255,255,255,.8);line-height:1.45;font-weight:500}
+
+/* Footer PSA — bukan sticky, ikut flow */
+.psa-foot{
+  padding:20px 20px 52px;
+  background:rgba(8,12,24,.98);
+  border-top:1px solid rgba(255,255,255,.07);
+  margin-top:24px;
+}
+.und-btn{width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--red),#ff3355);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(208,2,27,.4);transition:transform .15s}
+.und-btn:active{transform:scale(.98)}
+.rep-txt{text-align:center;margin-top:10px;font-size:12px;color:rgba(255,255,255,.35)}
+.rep-txt a{color:var(--gold);text-decoration:none;font-weight:600}
+
+/* ────────────────────────────────
+   SCREEN 5: DONE
+──────────────────────────────── */
+#s-done{
+  background:linear-gradient(160deg,#e8f9ef 0%,var(--bg) 40%,#fff 100%);
+  display:flex;flex-direction:column;align-items:center;
+  padding:52px 24px 52px;gap:20px;
+}
+.done-ring-wrap{width:110px;height:110px;position:relative;margin-top:8px}
+.done-ring{position:absolute;inset:0;border-radius:50%;border:3px solid rgba(13,155,80,.2);animation:rp 1.8s ease-out infinite}
+.done-ring:nth-child(2){animation-delay:.6s}
+.done-ring:nth-child(3){animation-delay:1.2s}
+@keyframes rp{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.7);opacity:0}}
+.done-ico{position:absolute;inset:8px;background:linear-gradient(135deg,var(--green),#22c06a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:0 12px 36px rgba(13,155,80,.4);animation:bi .6s cubic-bezier(.175,.885,.32,1.275) .2s both}
+@keyframes bi{0%{transform:scale(0) rotate(-10deg)}80%{transform:scale(1.1) rotate(2deg)}100%{transform:scale(1) rotate(0)}}
+.done-title{font-size:28px;font-weight:800;color:var(--blue);text-align:center}
+.done-sub{font-size:14px;color:var(--muted);text-align:center;line-height:1.6;max-width:300px}
+.done-recap{background:#fff;border-radius:20px;padding:20px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,63,136,.12);border:1px solid var(--border)}
+.dr-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.dr-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+.dr-row+.dr-row{border-top:1px solid var(--border)}
+.dr-lbl{font-size:13px;color:var(--muted)}
+.dr-val{font-size:14px;font-weight:700;color:var(--text);text-align:right;max-width:55%}
+.ready-pill{background:var(--green-bg);color:var(--green);font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px}
+.done-tip{background:linear-gradient(135deg,#fff8f0,#fffbf5);border:1px solid rgba(244,121,32,.2);border-radius:14px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#8b5e3c;line-height:1.5;width:100%;max-width:360px}
+.home-btn{width:100%;max-width:360px;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--blue-l));color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(0,63,136,.3);transition:transform .15s}
+.home-btn:active{transform:scale(.98)}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="sp-box">BRI</div>
+  <div class="sp-name">EduQ</div>
+  <div class="sp-sub">Smart Queue System</div>
+  <div class="sp-spin"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ═══════ SCREEN 1: WELCOME ═══════ -->
+<div class="screen active" id="s-welcome">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="wlc-logo">
+    <div class="wlc-box">BRI</div>
+    <div>
+      <div class="wlc-name">BRI</div>
+      <div class="wlc-sq">Smart Queue</div>
+    </div>
+  </div>
+  <div class="wlc-hero">
+    <div class="pill">✨ EduQ System</div>
+    <h1 class="wlc-title">Persiapkan Diri<br><span>Sebelum Dipanggil</span></h1>
+    <p class="wlc-sub">Gunakan waktu tunggu Anda untuk memastikan dokumen lengkap dan waspada terhadap penipuan.</p>
+  </div>
+  <div class="ticket">
+    <div class="t-stripe"></div>
+    <div class="t-body">
+      <div class="t-head">
+        <div class="t-logo">BRI</div>
+        <span class="t-brand">BRI</span>
+      </div>
+      <div class="t-num-wrap">
+        <div class="t-num">A 037</div>
+        <div class="t-type">Antrean Teller / Customer Service</div>
+      </div>
+      <hr class="t-dash">
+      <div class="t-meta">
+        <div><div class="t-ml">Tanggal</div><div class="t-mv" id="t-date">—</div></div>
+        <div><div class="t-ml">Waktu</div><div class="t-mv" id="t-time">—</div></div>
+        <div><div class="t-ml">Loket</div><div class="t-mv">CS/Teller</div></div>
+      </div>
+      <div class="t-qr">
+        <div>
+          <div class="t-qt">📱 Scan QR untuk persiapan</div>
+          <div class="t-qs">Cek dokumen & info keamanan</div>
+        </div>
+        <div class="t-qr-icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <rect x="2" y="2" width="10" height="10" rx="2" fill="white"/>
+            <rect x="3.5" y="3.5" width="7" height="7" rx="1" fill="#003F88"/>
+            <rect x="5" y="5" width="4" height="4" rx=".5" fill="white"/>
+            <rect x="20" y="2" width="10" height="10" rx="2" fill="white"/>
+            <rect x="21.5" y="3.5" width="7" height="7" rx="1" fill="#003F88"/>
+            <rect x="23" y="5" width="4" height="4" rx=".5" fill="white"/>
+            <rect x="2" y="20" width="10" height="10" rx="2" fill="white"/>
+            <rect x="3.5" y="21.5" width="7" height="7" rx="1" fill="#003F88"/>
+            <rect x="5" y="23" width="4" height="4" rx=".5" fill="white"/>
+            <rect x="14" y="2" width="4" height="4" rx="1" fill="white"/>
+            <rect x="14" y="8" width="4" height="4" rx="1" fill="white"/>
+            <rect x="15.5" y="15.5" width="5" height="5" rx="1" fill="white"/>
+            <rect x="20" y="14" width="4" height="4" rx="1" fill="white"/>
+            <rect x="26" y="14" width="4" height="4" rx="1" fill="white"/>
+            <rect x="14" y="20" width="4" height="8" rx="1" fill="white"/>
+            <rect x="20" y="20" width="8" height="4" rx="1" fill="white"/>
+            <rect x="24" y="26" width="6" height="6" rx="1.5" fill="white"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="wlc-btn" onclick="nav('s-menu')">Mulai Persiapan Sekarang →</button>
+  <div class="wlc-foot">KC MPH BRI · EduQ System 2025</div>
+</div>
+
+<!-- ═══════ SCREEN 2: MENU ═══════ -->
+<div class="screen" id="s-menu">
+  <div class="app-hdr">
+    <div class="ah-row">
+      <button class="ah-back" onclick="nav('s-welcome')">‹</button>
+      <div class="ah-sm-logo">BRI</div>
+      <div class="ah-title">
+        <div class="ah-t1">BRI Smart Queue</div>
+        <div class="ah-t2">EduQ System · Antrian A037</div>
+      </div>
+      <div class="ah-badge">A037</div>
+    </div>
+    <div class="ah-big">Pilih layanan yang<br>ingin Anda ajukan 👇</div>
+    <div class="ah-desc">Kami bantu persiapkan dokumen yang diperlukan</div>
+  </div>
+  <div class="menu-body">
+    <div class="sec-lbl">Layanan Perbankan</div>
+    <div class="mc" onclick="showCL('rekening-baru')">
+      <div class="mc-icon ic-b">🏦</div>
+      <div class="mc-text"><h3>Buka Rekening Tabungan</h3><p>Cek persyaratan & kelengkapan dokumen pembukaan rekening baru</p></div>
+      <div class="mc-arr">›</div>
+    </div>
+    <div class="mc" onclick="showCL('tutup-rekening')">
+      <div class="mc-icon ic-o">🔒</div>
+      <div class="mc-text"><h3>Tutup Rekening</h3><p>Dokumen yang perlu dibawa untuk penutupan rekening</p></div>
+      <div class="mc-arr">›</div>
+    </div>
+    <div class="mc" onclick="showCL('ubah-data')">
+      <div class="mc-icon ic-g">✏️</div>
+      <div class="mc-text"><h3>Perubahan Data (CIF)</h3><p>Update alamat, nomor HP, nama, dan data nasabah lainnya</p></div>
+      <div class="mc-arr">›</div>
+    </div>
+    <div class="mc" onclick="showCL('digital-banking')">
+      <div class="mc-icon ic-b">📱</div>
+      <div class="mc-text"><h3>Aktivasi Digital Banking</h3><p>BRImo, Internet Banking, dan layanan digital BRI</p></div>
+      <div class="mc-arr">›</div>
+    </div>
+    <div class="mc" onclick="showCL('kartu-atm')">
+      <div class="mc-icon ic-p">💳</div>
+      <div class="mc-text"><h3>Penggantian Kartu ATM</h3><p>Kartu hilang, rusak, atau PIN terblokir</p></div>
+      <div class="mc-arr">›</div>
+    </div>
+    <div class="sec-lbl">Keamanan Penting</div>
+    <!-- TOMBOL PSA — onclick langsung nav ke s-psa -->
+    <div class="warn-btn" onclick="nav('s-psa')">
+      <div class="wb-icon">🚨</div>
+      <div class="wb-text">
+        <h3>Waspada! Jual Beli Rekening</h3>
+        <p>Anda bisa menjadi <strong>KORBAN</strong> tanpa sadar. Ketuk untuk tahu risikonya sebelum terlambat →</p>
+      </div>
+    </div>
+    <div class="menu-pad"></div>
+  </div>
+</div>
+
+<!-- ═══════ SCREEN 3: CHECKLIST ═══════ -->
+<div class="screen" id="s-checklist">
+  <div class="app-hdr">
+    <div class="ah-row">
+      <button class="ah-back" onclick="nav('s-menu')">‹</button>
+      <div class="ah-sm-logo">BRI</div>
+      <div class="ah-title">
+        <div class="ah-t1" id="cl-title">Persyaratan</div>
+        <div class="ah-t2">Centang dokumen yang sudah disiapkan</div>
+      </div>
+    </div>
+  </div>
+  <div class="prog-box">
+    <div class="pb-top">
+      <span class="pb-lbl" id="pb-lbl">Kesiapan Dokumen</span>
+      <span class="pb-cnt" id="pb-cnt">0/0</span>
+    </div>
+    <div class="pb-track"><div class="pb-fill" id="pb-fill"></div></div>
+  </div>
+  <div class="info-note">
+    <span style="font-size:16px;flex-shrink:0">ℹ️</span>
+    <span>Centang semua item yang sudah Anda siapkan sebelum dipanggil ke loket.</span>
+  </div>
+  <div class="cl-list" id="cl-list"></div>
+  <div class="cl-foot">
+    <button class="cl-foot-btn locked" id="cl-btn" onclick="handleDone()">Centang semua item dulu</button>
+    <div class="cl-hint" id="cl-hint">Masih ada dokumen yang belum siap</div>
+  </div>
+  <div class="cl-pad"></div>
+</div>
+
+<!-- ═══════ SCREEN 4: PSA ═══════ -->
+<div class="screen" id="s-psa">
+  <!-- STICKY HEADER -->
+  <div class="psa-hdr">
+    <button class="psa-back" onclick="nav('s-menu')">‹</button>
+    <div class="psa-ht">
+      <h2>Peringatan Keamanan Perbankan</h2>
+      <p>Penting untuk Anda ketahui</p>
+    </div>
+    <div class="psa-badge">⛔ PENTING</div>
+  </div>
+
+  <!-- KONTEN UTAMA -->
+  <div class="psa-content">
+    <div class="psa-hero">
+      <span class="psa-big">⚠️</span>
+      <div class="psa-tag">Peringatan Keamanan</div>
+      <h1 class="psa-ttl">Anda Bisa Menjadi<br><span>KORBAN</span><br>Tanpa Sadar</h1>
+      <p class="psa-sub">Jual beli rekening bukan hanya melanggar hukum —<br><strong>Anda adalah pihak yang paling dirugikan.</strong></p>
+    </div>
+
+    <div class="psa-sl">Siapa yang sebenarnya rugi?</div>
+
+    <div class="vc">
+      <div class="vc-h">
+        <div class="vc-ico">😰</div>
+        <div class="vc-ht">
+          <h3>Si Penjual Rekening (Mungkin Anda?)</h3>
+          <p>Yang menerima imbalan Rp 300.000 – Rp 2.000.000</p>
+        </div>
+      </div>
+      <div class="vc-imp">
+        <div class="vc-row"><span class="vc-x">❌</span><span>Rekening dipakai untuk kejahatan: penipuan online, narkotika, atau terorisme</span></div>
+        <div class="vc-row"><span class="vc-x">❌</span><span>Nama & identitas Anda tersangkut kasus pidana berat</span></div>
+        <div class="vc-row"><span class="vc-x">❌</span><span>Ditangkap, dituntut, dipenjara — padahal "hanya jual rekening"</span></div>
+        <div class="vc-row"><span class="vc-x">❌</span><span>Semua rekening & aset Anda diblokir selamanya oleh PPATK</span></div>
+      </div>
+    </div>
+
+    <div class="vc">
+      <div class="vc-h">
+        <div class="vc-ico">😱</div>
+        <div class="vc-ht">
+          <h3>Keluarga & Orang Terdekat</h3>
+          <p>Yang ikut menanggung dampaknya</p>
+        </div>
+      </div>
+      <div class="vc-imp">
+        <div class="vc-row"><span class="vc-x">❌</span><span>Menanggung malu sosial dan stigma di lingkungan</span></div>
+        <div class="vc-row"><span class="vc-x">❌</span><span>Sulit mendapat pekerjaan karena catatan kriminal</span></div>
+        <div class="vc-row"><span class="vc-x">❌</span><span>Rekening anggota keluarga bisa ikut terimbas pemblokiran</span></div>
+      </div>
+    </div>
+
+    <div class="psa-sl">Ancaman hukum nyata</div>
+
+    <div class="lc">
+      <div class="lc-ico">⚖️</div>
+      <div class="lc-txt">
+        <h3>UU No. 8 Tahun 2010 tentang TPPU</h3>
+        <p>Membantu menyembunyikan hasil kejahatan melalui rekening orang lain dapat diancam penjara hingga <strong>20 tahun</strong> dan denda hingga <strong>Rp 10 Miliar</strong>.</p>
+      </div>
+    </div>
+    <div class="lc blue">
+      <div class="lc-ico">📋</div>
+      <div class="lc-txt">
+        <h3>UU ITE & KUHP</h3>
+        <p>Penyedia rekening untuk penipuan digital dapat dijerat UU ITE dengan ancaman pidana <strong>4–12 tahun penjara.</strong></p>
+      </div>
+    </div>
+
+    <div class="psa-sl">Langkah melindungi diri</div>
+
+    <div class="ss">
+      <div class="ss-item"><div class="ss-n">1</div><div class="ss-t">Jangan pernah menjual, menyewakan, atau meminjamkan rekening bank Anda kepada siapapun</div></div>
+      <div class="ss-item"><div class="ss-n">2</div><div class="ss-t">Jangan bagikan nomor rekening, PIN, OTP, atau data perbankan ke siapapun dengan alasan apapun</div></div>
+      <div class="ss-item"><div class="ss-n">3</div><div class="ss-t">Segera laporkan ke BRI atau Satgas PASTI OJK jika ada yang menawarkan membeli rekening Anda</div></div>
+      <div class="ss-item"><div class="ss-n">4</div><div class="ss-t">Ingat: uang Rp 500.000 tidak sebanding dengan penjara, nama baik hancur, dan keluarga menderita</div></div>
+    </div>
+  </div><!-- /psa-content -->
+
+  <!-- FOOTER PSA — mengikuti flow, tidak fixed/sticky -->
+  <div class="psa-foot">
+    <button class="und-btn" onclick="nav('s-menu')">✅ Saya Mengerti & Akan Waspada</button>
+    <div class="rep-txt">Ada tawaran mencurigakan? <a href="tel:14017">Laporkan ke BRI Call 14017</a></div>
+  </div>
+</div>
+
+<!-- ═══════ SCREEN 5: DONE ═══════ -->
+<div class="screen" id="s-done">
+  <div class="done-ring-wrap">
+    <div class="done-ring"></div><div class="done-ring"></div><div class="done-ring"></div>
+    <div class="done-ico">✅</div>
+  </div>
+  <h1 class="done-title">Siap Dilayani!</h1>
+  <p class="done-sub">Dokumen Anda sudah lengkap. Tetap di tempat duduk dan tunggu panggilan nomor antrian.</p>
+  <div class="done-recap">
+    <div class="dr-title">Ringkasan Kunjungan</div>
+    <div class="dr-row"><span class="dr-lbl">Nomor Antrian</span><span class="dr-val" style="font-size:18px;color:var(--blue)">A 037</span></div>
+    <div class="dr-row"><span class="dr-lbl">Layanan</span><span class="dr-val" id="done-svc">—</span></div>
+    <div class="dr-row"><span class="dr-lbl">Tanggal</span><span class="dr-val" id="done-date">—</span></div>
+    <div class="dr-row"><span class="dr-lbl">Status Dokumen</span><span class="ready-pill">✅ Lengkap</span></div>
+  </div>
+  <div class="done-tip">
+    <span style="font-size:18px;flex-shrink:0">💡</span>
+    <span>Siapkan <strong>dokumen fisik</strong> di tangan Anda saat nama dipanggil agar proses lebih cepat dan lancar.</span>
+  </div>
+  <button class="home-btn" onclick="nav('s-welcome')">🏠 Kembali ke Beranda</button>
+</div>
+
+<script>
+/* ─── DATA ─── */
+const LISTS = {
+  'rekening-baru':{title:'Buka Rekening Tabungan',items:[
+    {id:'ktp',label:'KTP asli dan masih berlaku',sub:'KTP Elektronik — pastikan tidak expired',opt:false},
+    {id:'npwp',label:'NPWP (jika memiliki)',sub:'Opsional, namun mempercepat proses',opt:true},
+    {id:'hp',label:'Nomor HP aktif atas nama sendiri',sub:'SIM card terdaftar atas nama Anda untuk verifikasi OTP',opt:false},
+    {id:'email',label:'Alamat email aktif',sub:'Email yang rutin digunakan untuk notifikasi',opt:false},
+    {id:'setoran',label:'Setoran awal min. Rp 500.000',sub:'Uang tunai atau siap transfer dari rekening lain',opt:false},
+  ]},
+  'tutup-rekening':{title:'Tutup Rekening',items:[
+    {id:'ktp',label:'KTP asli yang masih berlaku',sub:'Identitas diri pemilik rekening — wajib asli',opt:false},
+    {id:'buku',label:'Buku tabungan & kartu ATM',sub:'Semua buku tabungan dan kartu terkait rekening ini',opt:false},
+    {id:'saldo',label:'Saldo sudah dipindahkan / kosong',sub:'Transfer keluar semua saldo sebelum datang',opt:false},
+    {id:'hadir',label:'Datang sendiri (tidak diwakilkan)',sub:'Penutupan rekening hanya dapat dilakukan pemilik langsung',opt:false},
+  ]},
+  'ubah-data':{title:'Perubahan Data (CIF)',items:[
+    {id:'ktp',label:'KTP asli dengan data terbaru',sub:'KTP yang memuat informasi yang ingin diperbarui',opt:false},
+    {id:'buku',label:'Buku tabungan / kartu ATM',sub:'Untuk verifikasi kepemilikan rekening',opt:false},
+    {id:'hp-baru',label:'Nomor HP baru yang aktif',sub:'Jika ingin update nomor HP, siapkan SIM card baru',opt:true},
+    {id:'dok-tmbh',label:'Dokumen pendukung (jika perlu)',sub:'Mis: akta nikah / akta cerai untuk perubahan nama',opt:true},
+  ]},
+  'digital-banking':{title:'Aktivasi Digital Banking',items:[
+    {id:'ktp',label:'KTP asli yang masih berlaku',sub:'Untuk verifikasi data nasabah',opt:false},
+    {id:'buku',label:'Buku tabungan / kartu ATM',sub:'Nomor rekening dan kartu diperlukan',opt:false},
+    {id:'hp',label:'Nomor HP aktif atas nama sendiri',sub:'SIM card terdaftar atas nama Anda — wajib',opt:false},
+    {id:'smartphone',label:'Smartphone (untuk demonstrasi)',sub:'Opsional: langsung install & aktifkan BRImo di tempat',opt:true},
+  ]},
+  'kartu-atm':{title:'Penggantian Kartu ATM',items:[
+    {id:'ktp',label:'KTP asli yang masih berlaku',sub:'Identitas diri pemilik rekening',opt:false},
+    {id:'buku',label:'Buku tabungan',sub:'Untuk verifikasi kepemilikan rekening',opt:false},
+    {id:'kartu',label:'Kartu ATM lama (jika masih ada)',sub:'Jika hilang, cukup cerita kronologis ke petugas',opt:true},
+    {id:'biaya',label:'Biaya penggantian (jika berlaku)',sub:'Tanyakan ke CS mengenai biaya administrasi terkini',opt:true},
+  ]},
+};
+
+/* ─── STATE ─── */
+let cur = 's-welcome';
+let curList = null;
+let checked = new Set();
+
+/* ─── NAVIGASI SUPER SEDERHANA ───
+   Hanya toggle display via class.
+   window.scrollTo(0,0) supaya mulai dari atas.
+─── */
+function nav(id) {
+  document.getElementById(cur).classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
+  cur = id;
+}
+
+/* ─── CHECKLIST ─── */
+function showCL(type) {
+  curList = type;
+  checked = new Set();
+  const data = LISTS[type];
+  if (!data) return;
+
+  document.getElementById('cl-title').textContent = data.title;
+  document.getElementById('done-svc').textContent = data.title;
+
+  const list = document.getElementById('cl-list');
+  list.innerHTML = '';
+  data.items.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'cli';
+    el.innerHTML =
+      '<div class="cli-box">✓</div>' +
+      '<div class="cli-text"><h4>'+item.label+'</h4><p>'+item.sub+'</p></div>' +
+      (item.opt ? '<span class="cli-opt">Opsional</span>' : '');
+    el.addEventListener('click', function() {
+      if (checked.has(item.id)) { checked.delete(item.id); this.classList.remove('chk'); }
+      else { checked.add(item.id); this.classList.add('chk'); }
+      if (navigator.vibrate) navigator.vibrate(12);
+      refreshProg(data.items);
+    });
+    list.appendChild(el);
+  });
+
+  refreshProg(data.items);
+  nav('s-checklist');
+}
+
+function refreshProg(items) {
+  const total = items.length;
+  const count = checked.size;
+  document.getElementById('pb-fill').style.width = (total ? count/total*100 : 0) + '%';
+  document.getElementById('pb-cnt').textContent = count + '/' + total;
+  document.getElementById('pb-lbl').textContent =
+    count===0 ? 'Belum ada yang dicentang' :
+    count===total ? '✅ Semua dokumen siap!' : count+' dari '+total+' dokumen siap';
+
+  const required = items.filter(i=>!i.opt);
+  const allReqDone = required.every(i=>checked.has(i.id));
+  const btn  = document.getElementById('cl-btn');
+  const hint = document.getElementById('cl-hint');
+
+  if (count === total) {
+    btn.className='cl-foot-btn ready'; btn.textContent='✅ Saya Sudah Siap — Lanjut!'; hint.textContent='';
+  } else if (allReqDone) {
+    btn.className='cl-foot-btn ready'; btn.textContent='✅ Dokumen Wajib Lengkap — Lanjut!'; hint.textContent='Item opsional boleh dilewati';
+  } else {
+    const left = required.filter(i=>!checked.has(i.id)).length;
+    btn.className='cl-foot-btn locked'; btn.textContent=left+' item wajib lagi untuk melanjutkan'; hint.textContent='Dokumen wajib harus disiapkan';
+  }
+}
+
+function handleDone() {
+  if (document.getElementById('cl-btn').classList.contains('locked')) {
+    showToast('⚠️ Lengkapi dokumen wajib terlebih dahulu');
+    if (navigator.vibrate) navigator.vibrate([30,50,30]);
+    return;
+  }
+  if (navigator.vibrate) navigator.vibrate([50,30,100]);
+  spawnConfetti();
+  const now = new Date();
+  const mo = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  document.getElementById('done-date').textContent = now.getDate()+' '+mo[now.getMonth()]+' '+now.getFullYear();
+  nav('s-done');
+}
+
+/* ─── TOAST ─── */
+let _tt;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(_tt); _tt = setTimeout(()=>t.classList.remove('on'), 2400);
+}
+
+/* ─── CONFETTI ─── */
+function spawnConfetti() {
+  const cols=['#003F88','#0065CC','#F47920','#FFB800','#0D9B50','#FF4477','#44DDFF'];
+  for (let i=0;i<60;i++) setTimeout(()=>{
+    const p=document.createElement('div');
+    p.className='cf';
+    const d=1.5+Math.random()*2, s=4+Math.random()*8;
+    p.style.cssText='left:'+Math.random()*100+'%;background:'+cols[Math.floor(Math.random()*cols.length)]+
+      ';width:'+s+'px;height:'+s+'px;border-radius:'+(Math.random()>.5?'50%':'2px')+
+      ';animation-duration:'+d+'s;animation-delay:'+Math.random()*.4+'s';
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),(d+.5)*1000);
+  }, Math.random()*200);
+}
+
+/* ─── INIT ─── */
+(function() {
+  // Tanggal & waktu tiket
+  const now = new Date();
+  const mo = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  document.getElementById('t-date').textContent = now.getDate()+' '+mo[now.getMonth()]+' '+now.getFullYear();
+  document.getElementById('t-time').textContent = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+' WIB';
+
+  // Hilangkan splash setelah 1.2 detik
+  setTimeout(()=>{
+    const sp = document.getElementById('splash');
+    sp.classList.add('out');
+    setTimeout(()=>sp.remove(), 600);
+  }, 1200);
+
+  // Deep-link dari QR Code
+  const p = new URLSearchParams(location.search);
+  const s = p.get('s');
+  if (s && LISTS[s]) setTimeout(()=>{ nav('s-menu'); setTimeout(()=>showCL(s),300); }, 1400);
+  if (p.get('psa')==='1') setTimeout(()=>nav('s-psa'), 1400);
+
+  // Service Worker
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
